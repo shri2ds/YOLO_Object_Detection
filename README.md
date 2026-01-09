@@ -1,7 +1,5 @@
 # 👁️ YOLO_Object_Detection
-**From manual Bounding Box mathematics to production-grade Custom Object Detection using YOLO. A complete engineering log of building, training, and deploying vision systems.**
 
----
 > **Building Real-Time Vision Systems from First Principles to Production.**
 
 This repository documents the end-to-end engineering journey of mastering Object Detection. Unlike standard classification tasks (ResNet), this module focuses on the complexity of **localization**: predicting not just *what* an object is, but exactly *where* it is in spatial coordinates.
