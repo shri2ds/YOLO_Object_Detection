@@ -12,7 +12,7 @@ This repository documents the end-to-end engineering journey of mastering Object
 | :--- | :--- | :--- |
 | **BBox Mechanics** | **YOLO Format Visualization.** Implemented the math to convert normalized YOLO coordinates `(x_c, y_c, w, h)` into pixel-perfect OpenCV bounding boxes. | ✅ Done |
 | **IoU Metric** | **Intersection over Union.** Implementing the core metric used to measure overlap between predicted and ground truth boxes. | ⏳ Pending |
-| **YOLO Architecture** | **The Grid System.** Understanding how YOLO divides images into grids to predict objects in parallel. | ⏳ Pending |
+| **The Grid System** | **YOLO Architecture v1.** Built the "Mini-YOLO" architecture from scratch, implementing the $S \times S \times (B \times 5 + C)$ tensor output structure. | ✅ Done |
 | **Custom Training** | **Fine-Tuning YOLO.** Training a custom model on a real-world dataset (e.g., PPE/Potholes). | ⏳ Pending |
 
 ---
@@ -26,6 +26,18 @@ This repository documents the end-to-end engineering journey of mastering Object
     $$x_{corner} = (x_{center} - \frac{w}{2}) \times ImageWidth$$
     $$y_{corner} = (y_{center} - \frac{h}{2}) \times ImageHeight$$
 * **Outcome:** A script (`Visualise_BBox.py`) that generates synthetic ground truth data and renders pixel-perfect bounding boxes.
+
+### The YOLO Architecture (The Grid)
+**Goal:** Understand how to predict multiple objects efficiently without sliding windows.
+* **The Concept:** Divorced the idea of "Scanning" the image. Instead, implemented the **Grid Logic**:
+    * Split the image into a fixed $S \times S$ grid (e.g., $7 \times 7$).
+    * **Rule:** The grid cell containing the object's *center* is responsible for detecting it.
+* **The Tensor:** The model output is not a list, but a 3D Tensor of shape $(S, S, 30)$.
+    * **$S \times S$:** The spatial grid locations.
+    * **30 Channels:** 20 Classes + 2 Boxes $\times$ (4 coords + 1 confidence).
+* **The Implementation:** Built a custom `nn.Module` sequence:
+    * **Backbone:** Convolutional layers to downsample spatial dimensions ($448 \to 7$).
+    * **Head:** Linear layers to map features to the specific $(7 \times 7 \times 30)$ tensor shape.
 
 ---
 
