@@ -11,7 +11,7 @@ This repository documents the end-to-end engineering journey of mastering Object
 | Topic | Engineering Concept | Status |
 | :--- | :--- | :--- |
 | **BBox Mechanics** | **YOLO Format Visualization.** Implemented the math to convert normalized YOLO coordinates `(x_c, y_c, w, h)` into pixel-perfect OpenCV bounding boxes. | ✅ Done |
-| **IoU Metric** | **Intersection over Union.** Implementing the core metric used to measure overlap between predicted and ground truth boxes. | ⏳ Pending |
+| **IoU Metric** | **Intersection over Union.** Implementing the core metric used to measure overlap between predicted and ground truth boxes. | ✅ Done  |
 | **The Grid System** | **YOLO Architecture v1.** Built the "Mini-YOLO" architecture from scratch, implementing the $S \times S \times (B \times 5 + C)$ tensor output structure. | ✅ Done |
 | **Custom Training** | **Fine-Tuning YOLO.** Training a custom model on a real-world dataset (e.g., PPE/Potholes). | ⏳ Pending |
 
@@ -26,6 +26,15 @@ This repository documents the end-to-end engineering journey of mastering Object
     $$x_{corner} = (x_{center} - \frac{w}{2}) \times ImageWidth$$
     $$y_{corner} = (y_{center} - \frac{h}{2}) \times ImageHeight$$
 * **Outcome:** A script (`Visualise_BBox.py`) that generates synthetic ground truth data and renders pixel-perfect bounding boxes.
+
+### Intersection over Union (IoU)
+**Goal:** Implement the "Scorecard" for object detection.
+* **The Challenge:** Accuracy (Correct/Total) works for classification but fails for detection. We need to measure *how well* a predicted box overlaps with the truth.
+* **The Solution:** Implemented `inter_over_union(box_preds, box_labels, box_format)`:
+    $$IoU = \frac{\text{Area of Intersection}}{\text{Area of Union}}$$
+* **Corner Cases Handled:**
+    * No overlap (Intersection = 0).
+    * Division by Zero safety (`+ 1e-6`).
 
 ### The YOLO Architecture (The Grid)
 **Goal:** Understand how to predict multiple objects efficiently without sliding windows.
