@@ -30,7 +30,7 @@ This repository documents the end-to-end engineering journey of mastering Object
 ### Intersection over Union (IoU)
 **Goal:** Implement the "Scorecard" for object detection.
 * **The Challenge:** Accuracy (Correct/Total) works for classification but fails for detection. We need to measure *how well* a predicted box overlaps with the truth.
-* **The Solution:** Implemented `inter_over_union(box_preds, box_labels, box_format)`:
+* **The Solution:** Implemented `inter_over_union(BOX1, BOX2, Format)`:
     $$IoU = \frac{\text{Area of Intersection}}{\text{Area of Union}}$$
 * **Corner Cases Handled:**
     * No overlap (Intersection = 0).
