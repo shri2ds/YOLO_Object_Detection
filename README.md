@@ -15,7 +15,7 @@ This repository documents the end-to-end engineering journey of mastering Object
 | **The Grid System** | **YOLO Architecture v1.** Built the "Mini-YOLO" architecture from scratch, implementing the $S \times S \times (B \times 5 + C)$ tensor output structure. | ✅ Done |
 | **The Data Pipeline** | **Custom Dataset Engineering.** Built a robust data pipeline to convert raw images and text annotations into the complex $S \times S \times 30$ YOLO Target Tensor. | ✅ Done |
 | **Training Loop** | **The Engine Room.** Implementing the training loop, loss calculation, and backpropagation. | ⏳ Pending |
-
+| **Inference** | **Real-world Test.** Running the model on video or webcam feeds. | ⏳ Pending |
 
 ---
 
@@ -71,7 +71,6 @@ This repository documents the end-to-end engineering journey of mastering Object
 
 ## 🚀 Future Roadmap
 * **Data Engineering:** Automated annotation conversion (COCO to YOLO) and augmentation pipelines.
-* **Metric Implementation:** Manual implementation of Non-Maximum Suppression (NMS) to filter duplicate boxes.
 * **Production Deployment:** Exporting trained models to **ONNX** for high-performance inference.
 
 ---
