@@ -35,6 +35,13 @@ This repository documents the end-to-end engineering journey of mastering Object
 * **Corner Cases Handled:**
     * No overlap (Intersection = 0).
     * Division by Zero safety (`+ 1e-6`).
+ 
+| Index | Concept | Variable | Slice Code | Why? |
+| :--- | :--- | :--- | :--- | :--- |
+| **0** | X Center | $x_c$ | `0:1` | We need the center to calculate corners. |
+| **1** | Y Center | $y_c$ | `1:2` | We need the center to calculate corners. |
+| **2** | **Width** | $w$ | **`2:3`** | We need width to find Left/Right edges. |
+| **3** | **Height** | $h$ | **`3:4`** | We need height to find Top/Bottom edges. |
 
 ### The YOLO Architecture (The Grid)
 **Goal:** Understand how to predict multiple objects efficiently without sliding windows.
