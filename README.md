@@ -13,7 +13,9 @@ This repository documents the end-to-end engineering journey of mastering Object
 | **BBox Mechanics** | **YOLO Format Visualization.** Implemented the math to convert normalized YOLO coordinates `(x_c, y_c, w, h)` into pixel-perfect OpenCV bounding boxes. | ✅ Done |
 | **IoU Metric** | **Intersection over Union.** Implementing the core metric used to measure overlap between predicted and ground truth boxes. | ✅ Done  |
 | **The Grid System** | **YOLO Architecture v1.** Built the "Mini-YOLO" architecture from scratch, implementing the $S \times S \times (B \times 5 + C)$ tensor output structure. | ✅ Done |
-| **Custom Training** | **Fine-Tuning YOLO.** Training a custom model on a real-world dataset (e.g., PPE/Potholes). | ⏳ Pending |
+| **The Data Pipeline** | **Custom Dataset Engineering.** Built a robust data pipeline to convert raw images and text annotations into the complex $S \times S \times 30$ YOLO Target Tensor. | ✅ Done |
+| **Training Loop** | **The Engine Room.** Implementing the training loop, loss calculation, and backpropagation. | ⏳ Pending |
+
 
 ---
 
@@ -54,6 +56,16 @@ This repository documents the end-to-end engineering journey of mastering Object
 * **The Implementation:** Built a custom `nn.Module` sequence:
     * **Backbone:** Convolutional layers to downsample spatial dimensions ($448 \to 7$).
     * **Head:** Linear layers to map features to the specific $(7 \times 7 \times 30)$ tensor shape.
+ 
+### The Data Pipeline (Pothole Detection)
+**Goal:** Bridge the gap between raw files and the Neural Network.
+* **The Challenge:** YOLO doesn't take "images and labels." It takes a 3D Tensor $(7 \times 7 \times 30)$ where every grid cell knows if it contains an object.
+* **The Implementation:** Created a custom `PotholeDataset` class that performs **Real-time Tensor Encoding**:
+    1.  **Grid Assignment:** Calculates which $7 \times 7$ cell is responsible for an object ($i, j$).
+    2.  **Relative Localization:** Converts global coordinates $(x, y)$ into cell-relative offsets $(x_{cell}, y_{cell})$.
+        * *Math:* $x_{cell} = (x_{global} \times S) - \text{Col}_{index}$
+    3.  **Tensor Construction:** Populates the specific $[i, j]$ vector with $[Confidence, x, y, w, h, Class]$.
+* **Validation:** Built a "Round-Trip" visualizer that decodes the tensor back into boxes to verify the math is reversible and accurate.
 
 ---
 
