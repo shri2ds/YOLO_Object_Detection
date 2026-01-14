@@ -2,6 +2,8 @@
 
 > **Building Real-Time Vision Systems from First Principles to Production.**
 
+
+
 This repository documents the end-to-end engineering journey of mastering Object Detection. Unlike standard classification tasks (ResNet), this module focuses on the complexity of **localization**: predicting not just *what* an object is, but exactly *where* it is in spatial coordinates.
 
 ---
@@ -58,36 +60,19 @@ This repository documents the end-to-end engineering journey of mastering Object
     * **Head:** Linear layers to map features to the specific $(7 \times 7 \times 30)$ tensor shape.
  
 ### The Data Pipeline (Pothole Detection)
-**Goal:** Bridge the gap between raw files and the Neural Network.
+**Goal:** Engineering a memory-efficient data pipeline for single-class detection.
 
 <p align="center">
-  <img src="assets/pothole_demo.png" alt="Pothole Detection Result" width="600"/>
+  <img src="Experiments/assets/pothole_demo.png" alt="Pothole Detection Result" width="600"/>
   <br>
-  <em>Custom implementation of successfully localizing a pothole using the Grid System.</em>
+  <em>Figure 1: Custom implementation of successfully localizing a pothole using the Grid System.</em>
 </p>
 
-#### 📂 Project Structure
-```text
-YOLO_Object_Detection/
-├── Experiments/
-│   └── PotHoleDetection/   <-- Real-world application
-│       ├── data/           <-- Images & Text Labels
-│       ├── dataset.py      <-- Custom Tensor Encoder (Optimized C=1)
-│       ├── generate_csv.py <-- Data Indexing Script
-│       ├── dataset_download.py
-│       └── assets/          <-- Project Screenshots
-```
-* **The Challenge:** YOLO doesn't take "images and labels." It takes a 3D Target Tensor where every grid cell knows if it contains an object.
-* **The Optimization (C=1):** Standard YOLO uses 20 classes ($7 \times 7 \times 30$). Since this module specializes in Potholes, I optimized the tensor depth to 6 to reduce memory footprint:
-    1. Shape: ($7 \times 7 \times 6)$
-    2. Map: [Class_Prob(0), Confidence(1), x(2), y(3), w(4), h(5)]
-* **The Implementation:** Created a custom `PotholeDataset` class that performs **Real-time Tensor Encoding**:
-    1.  **Grid Assignment:** Calculates which $7 \times 7$ cell is responsible for an object ($i, j$).
-    2.  **Relative Localization:** Converts global coordinates $(x, y)$ into cell-relative offsets $(x_{cell}, y_{cell})$.
-        * *Math:* $x_{cell} = (x_{global} \times S) - \text{Col}_{index}$
-    3.  **Tensor Construction:** Populates the specific $[i, j]$ vector with $[Confidence, x, y, w, h, Class]$.
-* **Validation:** Built a "Round-Trip" visualizer that decodes the tensor back into boxes to verify the math is reversible and accurate.
-
+* **The Challenge:** Standard YOLO pipelines rely on sparse tensors ($7 \times 7 \times 30$) designed for 20 classes, wasting memory for single-class tasks.
+* **The Solution (C=1 Optimization):** I re-engineered the tensor architecture to be strictly purpose-built for Potholes, reducing tensor depth by **80%** (from 30 to 6 channels).
+    * **Optimized Map:** `[Class_Prob(0), Confidence(1), x(2), y(3), w(4), h(5)]`
+* **Grid Mechanics:** Implemented custom `__getitem__` logic to perform real-time, relative coordinate encoding ($x_{cell}, y_{cell}$) rather than relying on pre-computed targets.
+* **Validation:** Built a robust "Round-Trip" visualizer (see Figure 1) to prove the tensor math is reversible and lossless.
 ---
 
 ## 🚀 Future Roadmap
