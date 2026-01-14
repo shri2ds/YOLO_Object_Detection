@@ -59,7 +59,10 @@ This repository documents the end-to-end engineering journey of mastering Object
  
 ### The Data Pipeline (Pothole Detection)
 **Goal:** Bridge the gap between raw files and the Neural Network.
-* **The Challenge:** YOLO doesn't take "images and labels." It takes a 3D Tensor $(7 \times 7 \times 30)$ where every grid cell knows if it contains an object.
+* **The Challenge:** YOLO doesn't take "images and labels." It takes a 3D Target Tensor where every grid cell knows if it contains an object.
+* **The Optimization (C=1):** Standard YOLO uses 20 classes ($7 \times 7 \times 30$). Since this module specializes in Potholes, I optimized the tensor depth to 6 to reduce memory footprint:
+    1. Shape: ($7 \times 7 \times 6)$
+    2. Map: [Class_Prob(0), Confidence(1), x(2), y(3), w(4), h(5)]
 * **The Implementation:** Created a custom `PotholeDataset` class that performs **Real-time Tensor Encoding**:
     1.  **Grid Assignment:** Calculates which $7 \times 7$ cell is responsible for an object ($i, j$).
     2.  **Relative Localization:** Converts global coordinates $(x, y)$ into cell-relative offsets $(x_{cell}, y_{cell})$.
