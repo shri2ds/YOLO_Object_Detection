@@ -59,6 +59,24 @@ This repository documents the end-to-end engineering journey of mastering Object
  
 ### The Data Pipeline (Pothole Detection)
 **Goal:** Bridge the gap between raw files and the Neural Network.
+
+<p align="center">
+  <img src="assets/pothole_demo.png" alt="Pothole Detection Result" width="600"/>
+  <br>
+  <em>Custom implementation of successfully localizing a pothole using the Grid System.</em>
+</p>
+
+#### 📂 Project Structure
+```text
+YOLO_Object_Detection/
+├── Experiments/
+│   └── PotHoleDetection/   <-- Real-world application
+│       ├── data/           <-- Images & Text Labels
+│       ├── dataset.py      <-- Custom Tensor Encoder (Optimized C=1)
+│       ├── generate_csv.py <-- Data Indexing Script
+│       ├── dataset_download.py
+│       └── assets/          <-- Project Screenshots
+```
 * **The Challenge:** YOLO doesn't take "images and labels." It takes a 3D Target Tensor where every grid cell knows if it contains an object.
 * **The Optimization (C=1):** Standard YOLO uses 20 classes ($7 \times 7 \times 30$). Since this module specializes in Potholes, I optimized the tensor depth to 6 to reduce memory footprint:
     1. Shape: ($7 \times 7 \times 6)$
