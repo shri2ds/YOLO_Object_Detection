@@ -16,6 +16,7 @@ This repository documents the end-to-end engineering journey of mastering Object
 | **IoU Metric** | **Intersection over Union.** Implementing the core metric used to measure overlap between predicted and ground truth boxes. | ✅ Done  |
 | **The Grid System** | **YOLO Architecture v1.** Built the "Mini-YOLO" architecture from scratch, implementing the $S \times S \times (B \times 5 + C)$ tensor output structure. | ✅ Done |
 | **The Data Pipeline** | **Custom Dataset Engineering.** Built a robust data pipeline to convert raw images and text annotations into the complex $S \times S \times 30$ YOLO Target Tensor. | ✅ Done |
+| **Loss Function** | **The Brain.** Implemented the custom Multi-Part Loss with Vectorized Masking (`Experiments/PotHoleDetection/lossfunction.py`) to handle Class Imbalance ($\lambda_{coord}=5, \lambda_{noobj}=0.5$). | ✅ Done |
 | **Training Loop** | **The Engine Room.** Implementing the training loop, loss calculation, and backpropagation. | ⏳ Pending |
 | **Inference** | **Real-world Test.** Running the model on video or webcam feeds. | ⏳ Pending |
 
