@@ -5,17 +5,8 @@ Implementation of the Multi-Part Loss described in the original YOLO paper.
 
 import torch
 import torch.nn as nn
-import sys
-import os
 
-# Get the directory of the current script (PotHoleDetection)
-current_dir = os.path.dirname(os.path.abspath(__file__))
-# Get the parent directory (Experiments)
-parent_dir = os.path.dirname(current_dir)
-# Add the parent directory to Python's search path
-sys.path.append(parent_dir)
 # --- IMPORT CHECK ---
-# Ensures we can find the IoU function regardless of file structure
 try:
     from IoU_Metric import inter_over_union
 except ImportError:
