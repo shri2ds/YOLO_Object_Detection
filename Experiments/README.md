@@ -10,7 +10,9 @@ This module implements a specialized version of the YOLO v1 data pipeline, optim
 │       ├── 📁 data                 # Raw images (.jpg) and YOLO labels (.txt)
 │       ├── 📄 dataset.py           # PyTorch Dataset class & Grid Encoder (S=7, C=1)
 │       ├── 📄 generate_csv.py      # Creates train/test mapping for DataLoader
-│       └── 📄 dataset_download.py  # Kaggle API integration script
+│       ├── 📄 model.py             # YOLOv1 CNN Architecture (From Scratch)   
+│       ├── 📄 dataset_download.py  # Kaggle API integration script
+│       └── README.md               # Detailed Experiment Documentation
 └── 📁 assets                       # Visualization outputs (e.g., pothole_demo.png)
 ```
 
@@ -51,7 +53,7 @@ This ensures that the model learns to predict *offsets* from the grid corner, wh
 
 We cannot use standard `CrossEntropy` or `MSE` directly because the image is mostly empty background. If we treated all pixels equally, the model would learn to predict "No Object" everywhere and achieve 94% accuracy but 0% utility.
 
-##### **The 4-Part Loss Logic**
+##### The 4-Part Loss Logic
 We calculate the Total Loss ($L$) as the sum of four components:
 
 $$L = \lambda_{coord} L_{coord} + L_{obj} + \lambda_{noobj} L_{noobj} + L_{class}$$
@@ -79,3 +81,45 @@ box_predictions = exists_box * (
     best_box * box2_coords + (1 - best_box) * box1_coords
 )
 ```
+
+#### 5. The Model Architecture (The Body)
+**Goal:** Implement the YOLO v1 CNN architecture from scratch, optimized for Pothole Detection.
+
+Instead of defining 24 separate layers manually, we implemented a **Configuration-Driven Architecture**. The entire model structure is defined in a simple list, making it highly modular and easy to modify for experiments.
+
+##### **A. The Configuration Pattern**
+
+The architecture is defined in `model.py` using a list of tuples:
+```python
+# (kernel_size, filters, stride, padding)
+architecture_config = [
+    (7, 64, 2, 3),   # "Wide Angle" start (448 -> 224)
+    "M",             # MaxPool (2x zoom out)
+    [(1, 256, 1, 0), (3, 512, 1, 1), 4], # Repeated Blocks
+    ...
+]
+```
+- **Tuples**: Define standard Convolutional layers.
+- **"M"**: Defines MaxPool layers (reducing spatial size by half).
+- **Lists `[ ... ]`**: Define repeating blocks (e.g., repeat this sub-structure 4 times).
+
+##### B. The Bottleneck Strategy (1x1 Convolutions)
+
+To keep the model fast enough for real-time inference (45 FPS), we use **1x1 Convolutions** to reduce parameter count before performing heavy operations.
+
+**The Problem:**
+Running a `3 × 3` filter on 512 channels is computationally expensive (~2.3M params per layer).
+
+**The Solution:**
+- **Squeeze**: Use a `1 × 1` filter to reduce depth from **512 → 256**.
+- **Process**: Run the `3 × 3` filter on the smaller depth of **256**.
+- **Expand**: The network expands the features back up in later layers.
+
+##### C. Final Output Shape
+
+The model transforms the input image into our specific Grid Prediction Tensor:
+```text
+Input: (Batch, 3, 448, 448)  ──[ CNN ]──>  Output: (Batch, 7, 7, 11)
+```
+- `7 × 7`: The Split Grid (`S`).
+- `11`: The Depth Vector (`C=1` Pothole Class + `B=2` Boxes `×` `5` coords).
