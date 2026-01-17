@@ -123,3 +123,42 @@ Input: (Batch, 3, 448, 448)  ──[ CNN ]──>  Output: (Batch, 7, 7, 11)
 ```
 - `7 × 7`: The Split Grid (`S`).
 - `11`: The Depth Vector (`C=1` Pothole Class + `B=2` Boxes `×` `5` coords).
+
+---
+### The Training Engine
+
+**Goal:** Implement the training loop (`train.py`) to connect the **Data**, **Model**, and **Loss Function**.
+
+`train.py`, which acts as the **central engine** of the project handles the iterative process of feeding data to the model, calculating error, and updating weights.
+
+#### 🛠️ A. The Training Workflow
+
+The loop follows the standard **PyTorch** regime, executed for every batch of images:
+
+```text
+1. Load Batch  --> (Images, Targets)
+2. Forward     --> Model(Images) = Predictions
+3. Loss        --> YoloLoss(Predictions, Targets) = Error Value
+4. Backward    --> Error.backward() (Calculate Gradients)
+5. Step        --> Optimizer.step() (Update Weights)
+```
+
+#### 📊 B. Configuration & Hyperparameters
+
+| Hyperparameter | Value    | Reason                                                                 |
+|----------------|----------|------------------------------------------------------------------------|
+| Batch Size     | 8        | Fits in standard memory. Reduce to 8 if OOM occurs.                    |
+| Learning Rate  | 2e-5     | Standard for fine-tuning YOLO from scratch.                            |
+| Epochs         | 10      | Sufficient for model to overfit a small dataset.                       |
+| Image Size     | 448x448  | Native YOLO v1 input resolution.                                       |
+
+#### 📉 C. Initial Results
+
+We successfully validated that the model is learning. The loss decreased significantly within the first few epochs:
+
+| Epoch | Mean Loss |
+|-------|-----------|
+| 1     | 184.28    |
+| 10    | 59.18     |
+
+> The sharp drop confirms that **Gradient Descent** is working, and the model is beginning to "understand" the **pothole features**.
