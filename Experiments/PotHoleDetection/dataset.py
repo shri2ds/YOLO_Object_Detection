@@ -66,6 +66,8 @@ class YOLODataset(torch.utils.data.Dataset):
 
         # Load Path
         image = Image.open(img_path).convert("RGB")
+        if self.transform:
+            image = self.transform(image)
 
         # Parse Label File
         # Expected Format per line: [class_id, x_center, y_center, width, height]
