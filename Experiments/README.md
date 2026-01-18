@@ -10,7 +10,9 @@ This module implements a specialized version of the YOLO v1 data pipeline, optim
 │       ├── 📁 data                 # Raw images (.jpg) and YOLO labels (.txt)
 │       ├── 📄 dataset.py           # PyTorch Dataset class & Grid Encoder (S=7, C=1)
 │       ├── 📄 generate_csv.py      # Creates train/test mapping for DataLoader
-│       ├── 📄 model.py             # YOLOv1 CNN Architecture (From Scratch)   
+│       ├── 📄 model.py             # YOLOv1 CNN Architecture (From Scratch)
+        ├── 📄 train.py             # Orchestrates the training loop, loss calculation, and weight updates
+        ├── 📄 utils.py             # Helper functions for IoU metrics, Non-Max Suppression (NMS), and checkpoints
 │       ├── 📄 dataset_download.py  # Kaggle API integration script
 │       └── README.md               # Detailed Experiment Documentation
 └── 📁 assets                       # Visualization outputs (e.g., pothole_demo.png)
