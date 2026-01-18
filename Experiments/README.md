@@ -125,11 +125,12 @@ Input: (Batch, 3, 448, 448)  ──[ CNN ]──>  Output: (Batch, 7, 7, 11)
 - `11`: The Depth Vector (`C=1` Pothole Class + `B=2` Boxes `×` `5` coords).
 
 ---
-### The Training Engine
+### The Training Engine & Safety Net: Checkpoints & Persistence
 
-**Goal:** Implement the training loop (`train.py`) to connect the **Data**, **Model**, and **Loss Function**.
+**Goal:** Implement the training loop (`train.py`) to connect the **Data**, **Model**, and **Loss Function** abiding the robust mechanism to save model weights and resume training, preventing data loss during long runs.
 
-`train.py`, which acts as the **central engine** of the project handles the iterative process of feeding data to the model, calculating error, and updating weights.
+* `train.py`, which acts as the **central engine** of the project handles the iterative process of feeding data to the model, calculating error, and updating weights.
+* We introduced the "Persistence Layer" to the training loop, ensuring that the model's "intelligence" is saved to disk periodically.
 
 #### 🛠️ A. The Training Workflow
 
@@ -149,10 +150,23 @@ The loop follows the standard **PyTorch** regime, executed for every batch of im
 |----------------|----------|------------------------------------------------------------------------|
 | Batch Size     | 8        | Fits in standard memory. Reduce to 8 if OOM occurs.                    |
 | Learning Rate  | 2e-5     | Standard for fine-tuning YOLO from scratch.                            |
-| Epochs         | 10      | Sufficient for model to overfit a small dataset.                       |
+| Epochs         | 10      | Sufficient for model to overfit a small dataset.                        |
 | Image Size     | 448x448  | Native YOLO v1 input resolution.                                       |
 
-#### 📉 C. Initial Results
+####  C. Key Component (`utils.py`)
+We created a dedicated utility module to handle housekeeping and geometric calculations:
+1.  **`save_checkpoint`:** Serializes the Model Weights (`state_dict`) and Optimizer State to a `.pth.tar` file.
+2.  **`load_checkpoint`:** Deserializes the file and loads the weights back into the Model and Optimizer.
+3.  **`start_epoch` Logic:** Modified `train.py` to read the saved epoch number, allowing the loop to resume exactly where it left off (e.g., `range(10, 20)`) rather than restarting at 0.
+
+#### D. Resume Training Logic
+We validated the "Pseudo Transfer Learning" effect:
+* **Fresh Run:** Initial Loss ~184 (Random weights).
+* **Resumed Run:** Initial Loss ~54 (Pre-trained weights).
+
+This confirms that the model successfully retained the learned features (pothole shapes) across different execution sessions.
+
+#### 📉 E. Initial Results
 
 We successfully validated that the model is learning. The loss decreased significantly within the first few epochs:
 
