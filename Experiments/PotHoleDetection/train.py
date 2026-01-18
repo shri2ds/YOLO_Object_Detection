@@ -1,4 +1,6 @@
 import torch
+import os
+import sys
 import torchvision.transforms as transforms
 import torch.optim as optim
 from tqdm import tqdm
@@ -6,7 +8,6 @@ from torch.utils.data import DataLoader
 from Model import Yolov1
 from dataset import YOLODataset
 from loss import YoloLoss
-from Calculate_IOU import inter_over_union
 from utils import (
     save_checkpoint,
     load_checkpoint,
@@ -14,7 +15,6 @@ from utils import (
 
 # --- Hyperparameters ---
 LEARNING_RATE = 2e-5
-# Selects NVIDIA GPU (cuda), Apple Silicon GPU (mps), or fallback to CPU
 DEVICE = (
     "cuda" if torch.cuda.is_available() 
     else "mps" if torch.backends.mps.is_available() 
@@ -31,14 +31,14 @@ LOAD_MODEL_FILE = "exmaple.tar"    # Provide the name of the model
 
 # --- Image Transforms ---
 # We resize to 448x448 as required by YOLO
-transform = transforms.Compose([
+transform = transforms.Compe([
     transforms.Resize((448, 448)),
     transforms.ToTensor(),
 ])
 
-def train_fn(train_loader, model, optimizer, loss_fn):
+def train_fn(train_loader, model, optimizer, ls_fn):
     loop = tqdm(train_loader, leave=True)
-    mean_loss = []
+    mean_ls = []
 
     for batch_idx, (x,y) in enumerate(loop):
         x, y  = x.to(DEVICE), y.to(DEVICE)
