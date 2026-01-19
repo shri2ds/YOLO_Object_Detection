@@ -178,3 +178,20 @@ We successfully validated that the model is learning. The loss decreased signifi
 | 10    | 59.18     |
 
 > The sharp drop confirms that **Gradient Descent** is working, and the model is beginning to "understand" the **pothole features**.
+
+---
+### Inference & Visualization
+**Goal:** Complete the full pipeline by converting model tensor outputs into visual bounding boxes on test images.
+
+We implemented the Inference Engine (`predict.py`) and the geometric translation logic (`utils.py`).
+
+#### **A. The "Tensor to Box" Challenge**
+The model outputs a raw tensor of shape $(7, 7, 30)$. We implemented `cellboxes_to_boxes` to decode this:
+1.  **Extraction:** Parsed the tensor into 2 bounding boxes per cell + Class Confidence.
+2.  **Selection:** Discarded the lower-confidence box in each cell.
+3.  **Coordinate Conversion:** Converted "Cell-Relative" coordinates $(0..1)$ into "Image-Relative" coordinates $(0..1)$ for plotting.
+
+#### **B. Visualization**
+* **Tool:** Used `Matplotlib.patches.Rectangle` to draw boxes.
+* **Result:** Successfully detected potholes in the test set.
+* **Observation:** The model sometimes predicts overlapping boxes or misses adjacent potholes. This highlights the sensitivity of NMS (Non-Max Suppression) thresholds and the YOLOv1 "one-object-per-cell" limitation.
