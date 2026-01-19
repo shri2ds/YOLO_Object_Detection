@@ -46,3 +46,42 @@ def non_max_suppression(bboxes, iou_threshold, threshold, box_format="midpoint")
 
     return bboxes_after_nms
 
+def cellboxes_to_boxes(out, S=7):
+    """
+    Converts the raw (batch, S, S, 30) tensor into a list of bounding boxes
+    relative to the entire image, not just the cell.
+    """
+    device = out.device
+    predictions = out.reshape(out.shape[0], S, S, 11)
+
+    # Extract variables for both boxes
+    # Box 1: Index 1..5
+    confidence = predictions[..., 1].unsqueeze(3)
+    bboxes1 = predictions[..., 2:6]
+
+    # Box 2: Index 6..10
+    confidence2 = predictions[..., 6].unsqueeze(3)
+    bboxes2 = predictions[..., 7:11]
+
+    # Keep the box with higher confidence
+    scores =  torch.cat((confidence, confidence2), dim=-1)
+    best_box = scores.argmax(-1).unsqueeze(-1)
+    best_boxes = bboxes1 * (1 - best_box) + bboxes2 * best_box
+
+    # Convert Cell coordinates (0..1) to Image coordinates (0..7)
+    cell_indices = torch.arange(S).repeat(out.shape[0], S, 1).unsqueeze(-1).to(device)
+
+    # X = (x_cell + cell_index) / S
+    x = 1 / S * (best_boxes[..., 0:1] + cell_indices)
+    # Y = (y_cell + row_index) / S
+    y = 1 / S * (best_boxes[..., 1:2] + cell_indices.permute(0, 2, 1, 3))
+
+    w_h = 1 / S * best_boxes[..., 2:4]
+
+    # Concatenate Class + Score + X + Y + W + H
+    converted_bboxes = torch.cat((predictions[..., 0:1], scores.max(-1)[0].unsqueeze(-1), x, y, w_h), dim=-1)
+
+    return converted_bboxes.reshape(out.shape[0], S * S, -1).tolist()
+    
+    
+
