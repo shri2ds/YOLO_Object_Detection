@@ -5,7 +5,7 @@ import torchvision.transforms as transforms
 import torch.optim as optim
 from tqdm import tqdm
 from torch.utils.data import DataLoader
-from Model import Yolov1
+from model import Yolov1
 from dataset import YOLODataset
 from loss import YoloLoss
 from utils import (
