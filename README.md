@@ -1,8 +1,9 @@
 # 🛣️ YOLOv1 Pothole Detection (Production)
 
-A PyTorch implementation of YOLOv1 built for production deployment. This repository contains the modularized source code (`src`), training pipelines, and API serving infrastructure.
+> **🚧 Research & History:** Looking for the development logs, detailed explanation, conceptual walk-through or the mAP debugging journey?  
+> 👉 **[View the Research Journal](./Experiments/README_Research.md)**
 
-> **Note:** For research history, legacy notebooks, and debugging logs, see the [Experiments Directory](./Experiments/README_Research.md).
+A PyTorch implementation of YOLOv1 built for production deployment. This repository contains the modularized source code (`src`), training pipelines, and API serving infrastructure.
 
 ## 📂 Project Structure
 
@@ -23,7 +24,7 @@ YOLO/
 ├── train.py           # 🚀 Training Entry Point
 ├── config.py          # ⚙️ Hyperparameters & Path Configuration
 └── app/               # 🔌 FastAPI Service (Coming Soon)
-
+```
 ---
 
 ## 🚀 Quick Start
