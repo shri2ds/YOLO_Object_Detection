@@ -1,7 +1,11 @@
+# ⚠️ Research Archive
+
+**Note:** This document tracks my learning journey. For the latest usage instructions and production code, please see the [Main README](../../README.md).
+---
+
 # 👁️ YOLO_Object_Detection
 
 > **Building Real-Time Vision Systems from First Principles to Production.**
-
 
 
 This repository documents the end-to-end engineering journey of mastering Object Detection. Unlike standard classification tasks (ResNet), this module focuses on the complexity of **localization**: predicting not just *what* an object is, but exactly *where* it is in spatial coordinates.
