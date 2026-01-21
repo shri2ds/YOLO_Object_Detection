@@ -1,0 +1,8 @@
+# .gitignore
+__pycache__/
+*.pth.tar
+*.DS_Store
+.env
+venv/
+data/
+!data/.gitkeep
