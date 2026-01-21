@@ -5,12 +5,12 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
-from model import Yolov1
-from dataset import YOLODataset
-from loss import YoloLoss
-from utils import (
-    load_checkpoint,
+from src.model import Yolov1
+from src.dataset import YOLODataset
+from src.loss import YoloLoss
+from src.utils import (
     non_max_suppression,
+    mean_average_precision,
     cellboxes_to_boxes,
 )
 
