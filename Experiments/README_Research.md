@@ -1,6 +1,6 @@
 # ⚠️ Research Archive
 
-**Note:** This document tracks my learning journey. For the latest usage instructions and production code, please see the [Main README](../../README.md).
+**Note:** This document tracks my learning journey. For the latest usage instructions and production code, please see the [Main README](../README.md).
 ---
 
 # 👁️ YOLO_Object_Detection
