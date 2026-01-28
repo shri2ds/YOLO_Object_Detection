@@ -1,65 +1,51 @@
-import config
-from src.model import Yolov1
-from src.dataset import YOLODataset
-from src.loss import YoloLoss
-
-# This works because we created src/utils/__init__.py
-from src.utils import (
-    intersection_over_union,
-    non_max_suppression,
-    mean_average_precision,
-    cellboxes_to_boxes,
-    save_checkpoint,
-    load_checkpoint,
-)
-
-####
+#!/usr/bin/env python3
 
 import torch
-import os
-import sys
 import torchvision.transforms as transforms
 import torch.optim as optim
 from tqdm import tqdm
 from torch.utils.data import DataLoader
-from model import Yolov1
-from dataset import YOLODataset
-from loss import YoloLoss
-from utils import (
+
+import config
+from src.model import YOLO_Architecture
+from src.model_pretrained import YOLO_Pretrained
+from src.dataset import YOLODataset
+from src.loss import YoloLoss
+from src.utils import (
     save_checkpoint,
     load_checkpoint,
 )
 
-# --- Hyperparameters ---
-LEARNING_RATE = 2e-5
-DEVICE = (
-    "cuda" if torch.cuda.is_available() 
-    else "mps" if torch.backends.mps.is_available() 
-    else "cpu"
-)
-BATCH_SIZE = 8 
-WEIGHT_DECAY = 0
-EPOCHS = 10
-NUM_WORKERS = 2
-PIN_MEMORY = False
-LOAD_MODEL = False                 # Change it to true if we've a model file 
-LOAD_MODEL_FILE = "exmaple.tar"    # Provide the name of the model   
+# --- Hyperparameters (from config.py) ---
+LEARNING_RATE = config.LEARNING_RATE
+DEVICE = config.DEVICE
+BATCH_SIZE = config.BATCH_SIZE
+WEIGHT_DECAY = config.WEIGHT_DECAY
+EPOCHS = config.EPOCHS
+NUM_WORKERS = config.NUM_WORKERS
+PIN_MEMORY = config.PIN_MEMORY
+LOAD_MODEL = config.LOAD_MODEL
+LOAD_MODEL_FILE = config.CHECKPOINT_FILE
+
+# --- Transfer Learning Configuration ---
+USE_PRETRAINED = True  # Set to True for ResNet-18 backbone, False for custom Darknet
+DROPOUT_RATE = 0.0     # NO DROPOUT - overfitting mode to verify model can learn
 
 
 # --- Image Transforms ---
-# We resize to 448x448 as required by YOLO
-transform = transforms.Compe([
-    transforms.Resize((448, 448)),
-    transforms.ToTensor(),
+# NO AUGMENTATION - overfitting mode (train = test, need to memorize exact images)
+train_transform = transforms.Compose([
+    transforms.Resize((config.IMG_SIZE, config.IMG_SIZE)),
+    transforms.ToTensor(),  # Only resize and convert to tensor, no randomness
 ])
 
-def train_fn(train_loader, model, optimizer, ls_fn):
+def train_fn(train_loader, model, optimizer, loss_fn):
     loop = tqdm(train_loader, leave=True)
-    mean_ls = []
+    mean_loss = []
 
     for batch_idx, (x,y) in enumerate(loop):
-        x, y  = x.to(DEVICE), y.to(DEVICE)
-        
+        x, y = x.to(DEVICE), y.to(DEVICE)
+
         # 1. Forward Pass
         out = model(x)
         loss = loss_fn(out, y)
@@ -68,17 +54,54 @@ def train_fn(train_loader, model, optimizer, ls_fn):
         # 2. Backward Pass
         optimizer.zero_grad()
         loss.backward()
-        optimizer.step()
+        optimizer.step()  # No gradient clipping - allow full updates
 
         # 3. Update Progress Bar
         loop.set_postfix(loss=loss.item())
 
-    print(f"Mean loss was {sum(mean_loss) / len(mean_loss)}")
+    epoch_mean_loss = sum(mean_loss) / len(mean_loss)
+    print(f"Mean loss was {epoch_mean_loss}")
+    return epoch_mean_loss
 
 def main():
     # Setup Model & Loss
-    model = Yolov1(split_size=7, num_boxes=2, num_classes=1).to(DEVICE)
-    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+    if USE_PRETRAINED:
+        print("📦 Using Pre-trained ResNet-18 backbone (Transfer Learning)")
+        print(f"🛡️  Regularization: Dropout={DROPOUT_RATE}, Weight Decay={WEIGHT_DECAY}, Data Augmentation=Enabled")
+        model = YOLO_Pretrained(
+            split_size=config.GRID_SIZE, 
+            num_of_boxes=config.NUM_BOXES, 
+            num_of_classes=config.NUM_CLASSES,
+            dropout=DROPOUT_RATE
+        ).to(DEVICE)
+    else:
+        print("🏗️  Using Custom Darknet backbone (Training from scratch)")
+        model = YOLO_Architecture(
+            split_size=config.GRID_SIZE, 
+            num_of_boxes=config.NUM_BOXES, 
+            num_of_classes=config.NUM_CLASSES
+        ).to(DEVICE)
+    
+    # Adam optimizer with NO weight decay for overfitting
+    optimizer = optim.Adam(
+        model.parameters(), 
+        lr=LEARNING_RATE, 
+        weight_decay=WEIGHT_DECAY,  # 0.0 from config
+        betas=(0.9, 0.999),
+        eps=1e-8
+    )
+    
+    # Very aggressive scheduler for overfitting mode
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, 
+        mode='min', 
+        factor=0.5,      # Reduce LR by 50%
+        patience=5,      # Very aggressive: wait only 5 epochs
+        min_lr=1e-7,     # Allow very low LR for deep overfitting
+        threshold=0.005, # Require only 0.5% improvement
+        cooldown=1       # Minimal cooldown
+    )
+    
     loss_fn = YoloLoss()
 
     # --- LOAD CHECKPOINT (If True) ---
@@ -86,12 +109,11 @@ def main():
         load_checkpoint(torch.load(LOAD_MODEL_FILE), model, optimizer)
 
     # Setup Data Loaders
-    # Note: We use the same file for train/test for now to overfit first(To verify if our model is working as expected)
     train_dataset = YOLODataset(
-        csv_file="data/train.csv",
-        img_dir="",
-        label_dir="",
-        transform=transform,
+        csv_file=config.TRAIN_CSV,
+        img_dir=config.IMG_DIR,
+        label_dir=config.LABEL_DIR,
+        transform=train_transform,
     )
 
     train_loader = DataLoader(
@@ -105,22 +127,42 @@ def main():
     
     # Start Training
     print(f"🚀 Training started on {DEVICE}...")
+    print(f"📊 Dataset: {len(train_dataset)} images, Batch size: {BATCH_SIZE}")
+    print(f"📈 Learning Rate: {LEARNING_RATE}, Weight Decay: {WEIGHT_DECAY}")
+    
+    best_loss = float('inf')
+    
     for epoch in range(EPOCHS):
         print(f"\nEpoch [{epoch + 1}/{EPOCHS}]")
 
         # Train for one epoch
-        train_fn(train_loader, model, optimizer, loss_fn)
+        epoch_loss = train_fn(train_loader, model, optimizer, loss_fn)
+        
+        # Step the scheduler
+        scheduler.step(epoch_loss)
+        
+        # Save best model
+        if epoch_loss < best_loss:
+            best_loss = epoch_loss
+            checkpoint = {
+                "state_dict": model.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "epoch": epoch,
+                "loss": best_loss,
+            }
+            save_checkpoint(checkpoint, filename="checkpoint_best.pth.tar")
+            print(f"✅ Best model saved! Loss: {best_loss:.4f}")
 
         # --- SAVE CHECKPOINT ---
-        # We save every 3 epochs to save disk space
-        if epoch % 3 == 0:
+        # Save every 25 epochs
+        if (epoch + 1) % 25 == 0:
             checkpoint = {
                 "state_dict": model.state_dict(),
                 "optimizer": optimizer.state_dict(),
                 "epoch": epoch,
             }
-            save_checkpoint(checkpoint, filename=f"checkpoint_epoch_{epoch}.pth.tar")
-
+            save_checkpoint(checkpoint, filename=f"checkpoint_epoch_{epoch + 1}.pth.tar")
+            print(f"✅ Checkpoint saved: checkpoint_epoch_{epoch + 1}.pth.tar")
 
 if __name__ == "__main__":
     main()

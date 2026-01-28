@@ -4,17 +4,22 @@ import random
 import glob
 
 
-DATASET_DIR = "data/final_pot_holes"
+# Actual data locations
+IMAGE_DIR = "data/images"
+LABEL_DIR = "data/labels"
+OUTPUT_DIR = "data/processed"
 
 
 def generate_csv():
-    print(f"🔍 Scanning '{DATASET_DIR}' for images...")
+    print(f"🔍 Scanning '{IMAGE_DIR}' for images...")
+
+    # Create output directory if it doesn't exist
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     # 1. Find all images inside the folder
-    # This matches 'final_pot_holes/*.jpg'
-    image_paths = glob.glob(os.path.join(DATASET_DIR, "*.jpg")) + \
-                  glob.glob(os.path.join(DATASET_DIR, "*.jpeg")) + \
-                  glob.glob(os.path.join(DATASET_DIR, "*.png"))
+    image_paths = glob.glob(os.path.join(IMAGE_DIR, "*.jpg")) + \
+                  glob.glob(os.path.join(IMAGE_DIR, "*.jpeg")) + \
+                  glob.glob(os.path.join(IMAGE_DIR, "*.png"))
 
     data = []
     missing_labels = 0
@@ -22,30 +27,17 @@ def generate_csv():
     print(f"   Found {len(image_paths)} images. Linking labels...")
 
     for img_path in image_paths:
-        # img_path example: "final_pot_holes/3.jpg"
-
-        # Get filename without extension (e.g., "3")
+        # Get filename without extension
         basename = os.path.basename(img_path)
         file_root = os.path.splitext(basename)[0]
-
         label_filename = file_root + ".txt"
-
-        # WE CHECK TWO LOCATIONS:
-        # 1. Same folder as image (Standard)
-        path_option_1 = os.path.join(os.path.dirname(img_path), label_filename)
-        # 2. Inside 'labels' subfolder (Your Structure)
-        path_option_2 = os.path.join(os.path.dirname(img_path), "labels", label_filename)
-
-        final_label_path = None
-
-        if os.path.exists(path_option_1):
-            final_label_path = path_option_1
-        elif os.path.exists(path_option_2):
-            final_label_path = path_option_2
-
-        if final_label_path:
-            # We save the path relative to the 'data' folder
-            data.append([img_path, final_label_path])
+        
+        # Check if corresponding label exists in LABEL_DIR
+        label_path = os.path.join(LABEL_DIR, label_filename)
+        
+        if os.path.exists(label_path):
+            # Store paths relative to project root
+            data.append([img_path, label_path])
         else:
             missing_labels += 1
             if missing_labels < 3:  # Print first few errors only
@@ -64,15 +56,18 @@ def generate_csv():
     train_data = data[:split_idx]
     test_data = data[split_idx:]
 
-    # Save CSVs
-    pd.DataFrame(train_data, columns=['img', 'label']).to_csv("data/train.csv", index=False)
-    pd.DataFrame(test_data, columns=['img', 'label']).to_csv("data/test.csv", index=False)
+    # Save CSVs to processed directory
+    train_csv_path = os.path.join(OUTPUT_DIR, "train.csv")
+    test_csv_path = os.path.join(OUTPUT_DIR, "test.csv")
+    
+    pd.DataFrame(train_data, columns=['img', 'label']).to_csv(train_csv_path, index=False)
+    pd.DataFrame(test_data, columns=['img', 'label']).to_csv(test_csv_path, index=False)
 
     print(f"\n✅ SUCCESS!")
     print(f"   - Total matched: {len(data)}")
     print(f"   - Train samples: {len(train_data)}")
     print(f"   - Test samples: {len(test_data)}")
-    print(f"   - Saved 'train.csv' and 'test.csv' in 'data' folder.")
+    print(f"   - Saved to '{OUTPUT_DIR}/' directory")
 
 
 if __name__ == "__main__":

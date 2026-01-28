@@ -82,3 +82,6 @@ if __name__ == "__main__":
         print("✅ SUCCESS: IoU calculation is correct.")
     else:
         print("❌ FAIL: Check logic.")
+
+# Alias for compatibility
+intersection_over_union = inter_over_union

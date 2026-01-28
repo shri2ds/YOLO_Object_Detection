@@ -61,8 +61,9 @@ class YOLODataset(torch.utils.data.Dataset):
             target (Tensor): The 7x7x6 Truth Tensor.
         """
         # Construct Path
-        label_path = os.path.join(self.label_dir, self.annotations.iloc[index, 1])
-        img_path = os.path.join(self.img_dir, self.annotations.iloc[index, 0])
+        # CSV now contains correct paths (data/images/... and data/labels/...)
+        label_path = os.path.join(self.label_dir, self.annotations.iloc[index, 1]) if self.label_dir else self.annotations.iloc[index, 1]
+        img_path = os.path.join(self.img_dir, self.annotations.iloc[index, 0]) if self.img_dir else self.annotations.iloc[index, 0]
 
         # Load Path
         image = Image.open(img_path).convert("RGB")

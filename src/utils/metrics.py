@@ -1,10 +1,7 @@
 import torch
 import numpy as np
-import os
-import sys, 
-# To import IoU_Metric functionality
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from IoU_Metric import inter_over_union
+
+from .box_ops import inter_over_union
 
 
 def save_checkpoint(state, filename="my_checkpoint.pth.tar"):

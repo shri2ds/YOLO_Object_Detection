@@ -1,0 +1,7 @@
+# Build an FP16 engine with dynamic batch sizes (min=1, opt=8, max=32)
+trtexec --onnx=yolo.onnx \
+        --saveEngine=yolo_fp16.engine \
+        --fp16 \
+        --minShapes=input:1x3x640x640 \
+        --optShapes=input:8x3x640x640 \
+        --maxShapes=input:32x3x640x640

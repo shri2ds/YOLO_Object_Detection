@@ -6,12 +6,7 @@ Implementation of the Multi-Part Loss described in the original YOLO paper.
 import torch
 import torch.nn as nn
 
-# --- IMPORT CHECK ---
-try:
-    from IoU_Metric import inter_over_union
-except ImportError:
-    # Fallback if the file is named differently
-    from IoU_Metric import calculate_iou as inter_over_union
+from src.utils.box_ops import inter_over_union
 
 
 class YoloLoss(nn.Module):
@@ -26,7 +21,7 @@ class YoloLoss(nn.Module):
 
         # The "Levers" (Lambdas)
         self.lambda_noobj = 0.5
-        self.lambda_coord = 5
+        self.lambda_coord = 10
 
     def forward(self, predictions, target):
         """
@@ -37,6 +32,9 @@ class YoloLoss(nn.Module):
         # Reshape to ensure we have the grid structure
         # (Batch, 7, 7, 11)
         predictions = predictions.reshape(-1, self.S, self.S, self.C + self.B * 5)
+
+        # Force all model outputs to be between 0 and 1
+        predictions = torch.sigmoid(predictions)
 
         # =====================================================================
         # PHASE 1: PREPARATION & RESPONSIBILITY (Finding the Winner)
@@ -98,72 +96,36 @@ class YoloLoss(nn.Module):
         )
         box_targets[..., 2:4] = torch.sqrt(box_targets[..., 2:4])
 
-        # (N, S, S, 4) -> (N*S*S, 4)
-        box_loss = self.mse(
-            torch.flatten(box_predictions, end_dim=-2),
-            torch.flatten(box_targets, end_dim=-2),
+        # Calculate box loss using winning box coordinates
+        box_loss = self.lambda_coord * torch.sum(
+            exists_box * (
+                    (box_predictions[..., 0:1] - box_targets[..., 0:1]) ** 2 +
+                    (box_predictions[..., 1:2] - box_targets[..., 1:2]) ** 2 +
+                    (box_predictions[..., 2:3] - box_targets[..., 2:3]) ** 2 +
+                    (box_predictions[..., 3:4] - box_targets[..., 3:4]) ** 2
+            )
         )
 
-        # --- 2. OBJECT LOSS (Confidence) ---
-        # "You found the object, but how confident are you?"
+        # Object loss: confidence of winning box vs target confidence (always 1)
+        pred_conf = best_box * box2_conf + (1 - best_box) * box1_conf
+        object_loss = torch.sum(exists_box * (pred_conf - target[..., 1:2]) ** 2)
 
-        # Select the confidence of the winning box
-        pred_box_conf = (
-            best_box * box2_conf + (1 - best_box) * box1_conf
+        # No object loss: confidence in empty cells for both boxes + loser box in object cells
+        no_object_loss = self.lambda_noobj * torch.sum(
+            (1 - exists_box) * (box1_conf ** 2 + box2_conf ** 2)
+        )
+        
+        # Penalize loser box in cells with objects
+        # If best_box=0 (box1 wins), penalize box2; if best_box=1 (box2 wins), penalize box1
+        no_object_loss += self.lambda_noobj * torch.sum(
+            exists_box * (best_box * box1_conf ** 2 + (1 - best_box) * box2_conf ** 2)
         )
 
-        # Target Confidence is always 1 (if object exists)
-        object_loss = self.mse(
-            torch.flatten(exists_box * pred_box_conf),
-            torch.flatten(exists_box * target[..., 1:2]),
-        )
+        # Class loss: predicted class vs target class
+        class_loss = torch.sum(
+            exists_box * (predictions[..., 0:1] - target[..., 0:1]) ** 2)
 
-        # --- 3. NO OBJECT LOSS (The Silence) ---
-        # "Punish the empty cells AND the loser box in the object cells"
-
-        # Part A: Punish ALL boxes in Empty Cells
-        # Flatten everything to (Batch * S * S, 1)
-        no_object_loss = self.mse(
-            torch.flatten((1 - exists_box) * box1_conf, start_dim=1),
-            torch.flatten((1 - exists_box) * target[..., 1:2], start_dim=1),
-        )
-
-        no_object_loss += self.mse(
-            torch.flatten((1 - exists_box) * box2_conf, start_dim=1),
-            torch.flatten((1 - exists_box) * target[..., 1:2], start_dim=1),
-        )
-
-        # Part B: If an object exists, the "Loser" box is also No Object
-        # If Best Box is 1 (Box 2 won), then Box 1 is a loser.
-        no_object_loss += self.mse(
-            torch.flatten(exists_box * best_box * box1_conf, start_dim=1),
-            torch.flatten(torch.zeros_like(box1_conf), start_dim=1)
-        )
-        # If Best Box is 0 (Box 1 won), then Box 2 is a loser.
-        no_object_loss += self.mse(
-            torch.flatten(exists_box * (1 - best_box) * box2_conf, start_dim=1),
-            torch.flatten(torch.zeros_like(box2_conf), start_dim=1)
-        )
-
-        # --- 4. CLASS LOSS ---
-        # (N, S, S, C) -> (N*S*S, C)
-        class_loss = self.mse(
-            torch.flatten(exists_box * predictions[..., :self.C], end_dim=-2),
-            torch.flatten(exists_box * target[..., :self.C], end_dim=-2),
-        )
-
-        # =====================================================================
-        # PHASE 3: TOTAL LOSS
-        # =====================================================================
-
-        loss = (
-            self.lambda_coord * box_loss  # x, y, w, h
-            + object_loss                 # Confidence (Winner)
-            + self.lambda_noobj * no_object_loss # Confidence (Empty + Losers)
-            + class_loss                  # Class Probability
-        )
-
-        return loss
+        return box_loss + object_loss + no_object_loss + class_loss
 
 # --- UPDATED MAIN EXECUTION BLOCK ---
 if __name__ == "__main__":
