@@ -22,8 +22,7 @@ YOLO/
 │   └── processed/     # CSV manifest files (train.csv, test.csv)
 ├── Experiments/       # ⚗️ Research Sandbox (Legacy code & Notebooks)
 ├── train.py           # 🚀 Training Entry Point
-├── config.py          # ⚙️ Hyperparameters & Path Configuration
-└── app/               # 🔌 FastAPI Service (Coming Soon)
+└── config.py          # ⚙️ Hyperparameters & Path Configuration
 ```
 ---
 
@@ -43,10 +42,6 @@ To start training from scratch using the engine in src/:
 python train.py
 ```
 
-### 4. Inference (API)
-```bash
-uvicorn app.main:app --reload
-```
 ---
 
 ## 📊 Performance
