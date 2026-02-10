@@ -18,12 +18,12 @@ TEST_CSV = os.path.join(DATA_DIR, "processed", "test.csv")
 # Checkpoint Path (Save model in root or a specific folder)
 CHECKPOINT_FILE = os.path.join(BASE_DIR, "yolo_pothole.pth.tar")
 
-# Hyperparameters (OVERFITTING MODE - for sanity check)
-LEARNING_RATE = 5e-4  # Very high LR for aggressive overfitting
+# Hyperparameters (Proven configuration from Practice/YOLO)
+LEARNING_RATE = 1e-4  # Stable learning rate
 DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
-BATCH_SIZE = 16
-WEIGHT_DECAY = 0.0  # NO weight decay - allow full overfitting
-EPOCHS = 200  # Full training to reach loss ~10
+BATCH_SIZE = 16  # Proven batch size
+WEIGHT_DECAY = 1e-3  # Proven weight decay
+EPOCHS = 200  # Full training
 NUM_WORKERS = 2
 PIN_MEMORY = False  # Set to False for MPS compatibility
 LOAD_MODEL = False

@@ -5,17 +5,18 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
-from src.model import Yolov1
+from src.model import YOLO_Architecture
 from src.dataset import YOLODataset
 from src.loss import YoloLoss
 from src.utils import (
     non_max_suppression,
-    mean_average_precision,
     cellboxes_to_boxes,
+    load_checkpoint,
+    mean_average_precision,
 )
 
 DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
-CHECKPOINT_FILE = "checkpoint_epoch_9.pth.tar"
+CHECKPOINT_FILE = "checkpoint_best.pth.tar"
 
 def plot_image(image, boxes):
     """Plots predicted bounding boxes on the image"""
@@ -42,11 +43,11 @@ def plot_image(image, boxes):
         rect = patches.Rectangle((upper_left_x * width, upper_left_y * height), rect_w * width, rect_h * height, linewidth=2, edgecolor="r", facecolor="none")
         ax.add_patch(rect)
 
-      plt.show()
+    plt.show()
 
 def main():
     # Setup
-    model = Yolov1(split_size=7, num_boxes=2, num_classes=1).to(DEVICE)
+    model = YOLO_Architecture(split_size=7, num_of_boxes=2, num_of_classes=1).to(DEVICE)
     optimizer = optim.Adam(model.parameters(), lr=2e-5)
 
     # Load Checkpoint
@@ -57,7 +58,7 @@ def main():
     # Load Data (Just reuse train.csv for sanity check)
     transform = transforms.Compose([transforms.Resize((448, 448)), transforms.ToTensor(), ])
     dataset = YOLODataset(
-        csv_file="data/test.csv", img_dir="", label_dir="", transform=transform
+        csv_file="data/processed/test.csv", img_dir="", label_dir="", transform=transform
     )
     loader = DataLoader(dataset, batch_size=1, shuffle=True)
 
@@ -81,8 +82,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-
-            
-            
+    main()     
     

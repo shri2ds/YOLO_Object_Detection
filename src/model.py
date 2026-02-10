@@ -2,11 +2,12 @@ import torch
 import torch.nn as nn
 
 class YOLO_Architecture(nn.Module):
-    def __init__(self, split_size=7, num_of_classes=20, num_of_boxes=2):
+    def __init__(self, split_size=7, num_of_classes=20, num_of_boxes=2, dropout=0.2):
         super(YOLO_Architecture, self).__init__()
         self.S = split_size
         self.B = num_of_boxes
         self.C = num_of_classes
+        self.dropout_rate = dropout
 
         # 1. The Backbone (Feature Extractor)
         # In production, this would be ResNet50 or Darknet53.
@@ -49,7 +50,7 @@ class YOLO_Architecture(nn.Module):
             nn.Flatten(),
             nn.Linear(1024 * self.S * self.S, 4096),
             nn.LeakyReLU(0.1),
-            nn.Dropout(0.5),
+            nn.Dropout(self.dropout_rate),
             nn.Linear(4096, self.S * self.S * (self.C + self.B * 5))
         )
 

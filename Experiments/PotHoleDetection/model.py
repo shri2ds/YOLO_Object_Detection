@@ -86,7 +86,7 @@ class Yolov1(nn.Module):
             nn.Flatten(),
             # Original paper used 4096, but we reduce to 496 to save GPU RAM and because Potholes are simpler than ImageNet
             nn.Linear(1024 * S * S, 496),
-            nn.Dropout(0.5),
+            nn.Dropout(0.2),
             nn.LeakyReLU(0.1),
             nn.Linear(496, S * S * (C + B * 5)),
         )
