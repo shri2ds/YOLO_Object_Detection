@@ -6,4 +6,3 @@ __pycache__/
 venv/
 data/
 !data/.gitkeep
-README.md
