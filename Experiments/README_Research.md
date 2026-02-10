@@ -23,7 +23,6 @@ This repository documents the end-to-end engineering journey of mastering Object
 | **Loss Function** | **The Brain.** Implemented the custom Multi-Part Loss with Vectorized Masking (`Experiments/PotHoleDetection/lossfunction.py`) to handle Class Imbalance ($\lambda_{coord}=5, \lambda_{noobj}=0.5$). | ✅ Done |
 | **Model Architecture** | **The Body.** Implementation of the YOLO CNN backbone with 24 convolutional layers. | ✅ Done |
 | **Training Loop** | **The Engine Room.** Implementing the training loop, loss calculation, and backpropagation. |  ✅ Done |
-| **Inference** | **Real-world Test.** Running the model on video or webcam feeds. | ⏳ Pending |
 
 ---
 
