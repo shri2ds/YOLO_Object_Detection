@@ -69,7 +69,7 @@ This repository documents the end-to-end engineering journey of mastering Object
 **Goal:** Engineering a memory-efficient data pipeline for single-class detection.
 
 <p align="center">
-  <img src="Experiments/assets/pothole_demo.png" alt="Pothole Detection Result" width="600"/>
+  <img src="assets/pothole_demo.png" alt="Pothole Detection Result" width="600"/>
   <br>
   <em>Figure 1: Custom implementation of successfully localizing a pothole using the Grid System.</em>
 </p>
